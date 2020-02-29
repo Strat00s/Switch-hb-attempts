@@ -40,7 +40,7 @@ int main(int argc, char *argv[]){
         // Your code goes here
         printf(CONSOLE_ESC(21;20H)"Use D-Pad or joystick to move the cursor");  // Show controls in the middle
         printf(CONSOLE_ESC(23;30H)"Row: %d        Col: %d", x, y);  // show coords in the middle
-        printf("\x1b[%d;%dH_", x, y, 16);  // print "_" on "x" row and "y" collum
+        printf("\x1b[%d;%dH_", x, y);  // print "_" on "x" row and "y" collum
 
         // move when a button is pressed as long as we are on the screen
         if (kDown & KEY_DOWN && x < MAX_ROW){
