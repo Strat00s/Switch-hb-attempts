@@ -6,13 +6,20 @@
 // Include the main libnx system header, for Switch development
 #include <switch.h>
 
+typedef struct Menu{
+    struct Menu *parrent;
+    int max;
+    int current;
+    struct Menu *submenus[];
+};
+
 // names (straight from switch-example)
 const char* const months[12] = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
 const char* const weekDays[7] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
 // main menu array
-char MainMenu[][15] = {"Help", "Submenu","Time","Exit"};
-char SubmenuMenu[][20] = {"Submenu option 1", "Submenu option 2", "Submenu option 3"};
+const char MainMenu[][15] = {"Help", "Submenu","Time","Exit"};
+const char SubmenuMenu[][20] = {"Submenu option 1", "Submenu option 2", "Submenu option 3"};
 
 // variables
 int main_pos = 1;  // main menu
@@ -20,6 +27,7 @@ int sub1_pos = 1;  // 1st layer submenus
 
 bool Main = true;
 bool sub1_on = true;
+
 
 bool submenu1(u64 kDown){
     // print the help
@@ -135,9 +143,7 @@ int main(int argc, char *argv[]){
         // just pressed in this frame compared to the previous one
         u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
 
-        // Your code goes here
 
-        // move when a button is pressed as long as we are on the screen
 
         // printf the main menu
         if (Main == true){
