@@ -11,14 +11,27 @@
 
 u64 kDown;
 
+typedef struct Menu{
+    int position;
+    bool available;
+    int size;
+    char *labels[];
+} Menu;
+
 int main_menu_pos = 1;
-char main_menu_labels[][15] = {"Help", "Console Info", "Exit"};
+char *main_menu_labels[] = {"Help", "Console Info", "Exit", "Shutdown", "Reboot"};
 bool main_menu_aval = true;
 
 int info_menu_pos = 1;
-char info_menu_labels[][15] = {"System", "Power", "Storage", "Joy-cons", "LCD", "Other"};
+char *info_menu_labels[] = {"System", "Hardware","Button test", "Other"};
 bool info_menu_aval = true;
 
+int hardware_menu_pos = 1;
+char *hardware_menu_labels[] = {"Battery", "Storage", "Controllers", "LCD", "USB", "Other?"};
+bool hardware_menu_aval = true;
+
+
+// move cursor
 int MoveCursor(int *pos, int max, int min){
     if (kDown & KEY_DOWN && *pos < max){
         (*pos)++;
@@ -30,130 +43,54 @@ int MoveCursor(int *pos, int max, int min){
     return *pos;
 }
 
-// possibility to print text items with one function
-//bool PrintItems(){
-//    for (int i = 0; i < sizeof(*text); i++){
-//        printf("\x1b[%d;1H  %s", i+1, text[i]);
-//    }
-//    if (kDown & KEY_B){
-//        printf(CONSOLE_ESC(2J));
-//        return true;
-//    }
-//    return false;
-//}
-
-
-
-
-bool PowerMenu(){
-    u32 bat_percentage;
-    ChargerType charger;
-    HidPowerInfo bat_info;
-    psmInitialize();
-    psmGetBatteryChargePercentage(&bat_percentage);
-    psmGetChargerType(&charger);
-    psmExit();
-    hidGetControllerPowerInfo(8, &bat_info, 1);
-
-    printf(CONSOLE_ESC(9;20H) "Charge: %d%%", bat_percentage);
-    printf(CONSOLE_ESC(10;20H) "Status:");
-    if (bat_info.powerConnected){
-        if (bat_info.isCharging){
-            printf(STATUS_POS "Charging                  ");    
-        }
-        else {
-            printf(STATUS_POS "Connected but not charging");
-        }
+// print menu items
+void PrintItems(char **items, int size){
+    for (int i = 0; i < size; i++){
+        printf("\x1b[%d;1H  %s", i+1, items[i]);
     }
-    else{
-        printf(STATUS_POS "Disconnected              ");
-    }
-    printf(CONSOLE_ESC(11;20H) "Charger: ");
-    switch(charger){
-        case 0: printf(CHARGER_POS "None    "); break;
-        case 1: printf(CHARGER_POS "Official"); break;
-        case 2: printf(CHARGER_POS "Other   "); break;
-    }
+}
 
-    // exit
+// exit from a menu and reset cursor possition for said menu
+bool Exit(int *position){
     if (kDown & KEY_B){
+        if (position != NULL){
+            *position = 1;
+        }
         printf(CONSOLE_ESC(2J));
         return true;
     }
-    return false;
+    else {
+        return false;
+    }
 }
 
-bool JoyConsMenu(){
-    u8 interface;
-    hidGetNpadInterfaceType(8, &interface);
-    printf(CONSOLE_ESC(10;20H) "Handheld connection type: ");
-    switch(interface){
-        case 1: printf(CONSOLE_ESC(10;46H) "Bleutooth"); break;
-        case 2: printf(CONSOLE_ESC(10;46H) "Rail     "); break;
-        case 3: printf(CONSOLE_ESC(10;46H) "USB      "); break;
-        case 4: printf(CONSOLE_ESC(10;46H) "Other    "); break;
-        default: printf(CONSOLE_ESC(10;46H) "Not connected"); break;
-    }
-    hidGetNpadInterfaceType(0, &interface);
-    printf(CONSOLE_ESC(12;20H) "Player 1 connection type: ");
-    switch(interface){
-        case 1: printf(CONSOLE_ESC(12;46H) "Bleutooth"); break;
-        case 2: printf(CONSOLE_ESC(12;46H) "Rail     "); break;
-        case 3: printf(CONSOLE_ESC(12;46H) "USB      "); break;
-        case 4: printf(CONSOLE_ESC(12;46H) "Other    "); break;
-        default: printf(CONSOLE_ESC(12;46H) "Not connected"); break;
-    }
-    printf(CONSOLE_ESC(4;60H)"con_interface: %d", interface);   //debug
-    if (kDown & KEY_B){
-        printf(CONSOLE_ESC(2J));
-        return true;
-    }
-    return false;
-}
 
 // each new function = new menu/item
 bool ConsoleInfoMenu(){
     if (info_menu_aval){
-        for (int i = 0; i < 6; i++){
-            printf("\x1b[%d;1H  %s", i+1, info_menu_labels[i]);
-        }
-        MoveCursor(&info_menu_pos, 6, 1);
-        if (kDown & KEY_B){
-            info_menu_pos = 1;
-            printf(CONSOLE_ESC(2J));
-            return true;
-        }
-    }
-    if (kDown & KEY_A || !info_menu_aval){
-        switch (info_menu_pos) {
-        case 2: printf(CONSOLE_ESC(2J)); info_menu_aval = PowerMenu();break;
-        case 4: printf(CONSOLE_ESC(2J)); info_menu_aval = JoyConsMenu();break;
-        }
+        PrintItems(info_menu_labels, 4);
+        MoveCursor(&info_menu_pos, 4, 1);
+        return Exit(&info_menu_pos);
     }
     return false;
 }
 
 bool HelpMenu(){
-    printf(CONSOLE_ESC(9;20H) "+-------------------------------------------+");
-    printf(CONSOLE_ESC(10;20H)"|This is a simple help.                     |");
-    printf(CONSOLE_ESC(11;20H)"+-------------------------------------------+");
-    printf(CONSOLE_ESC(12;20H)"|To select items, press A.                  |");
-    printf(CONSOLE_ESC(13;20H)"|Press B to go back.                        |");
-    printf(CONSOLE_ESC(14;20H)"|To exit, go to main menu and select 'Exit'.|");
-    printf(CONSOLE_ESC(15;20H)"+-------------------------------------------+");
-    if (kDown & KEY_B){
-        printf(CONSOLE_ESC(2J));
-        return true;
-    }
-    return false;
+    printf(CONSOLE_ESC(9;20H)  "+-------------------------------------------+");
+    printf(CONSOLE_ESC(10;20H) "|This is a simple help.                     |");
+    printf(CONSOLE_ESC(11;20H) "+-------------------------------------------+");
+    printf(CONSOLE_ESC(12;20H) "|To select items, press A.                  |");
+    printf(CONSOLE_ESC(13;20H) "|Press B to go back.                        |");
+    printf(CONSOLE_ESC(14;20H) "|To exit, go to main menu and select 'Exit'.|");
+    printf(CONSOLE_ESC(15;20H) "+-------------------------------------------+");
+
+    return Exit(NULL);
 }
 
 bool MainMenu(){
     if (main_menu_aval){
-        for (int i = 0; i < sizeof(main_menu_labels)/sizeof(main_menu_labels[0]); i++){
-            printf("\x1b[%d;1H  %s", i+1, main_menu_labels[i]);
-        }
-        MoveCursor(&main_menu_pos, 3, 1);
+        PrintItems(main_menu_labels, 5);
+        MoveCursor(&main_menu_pos, 5, 1);
         if (kDown & KEY_B){
             main_menu_pos = 3;
         }
@@ -163,12 +100,17 @@ bool MainMenu(){
         case 1: printf(CONSOLE_ESC(2J)); main_menu_aval = HelpMenu();break;
         case 2: printf(CONSOLE_ESC(2J)); main_menu_aval = ConsoleInfoMenu(); break;
         case 3: return true;
+        case 4: bpcInitialize(); bpcShutdownSystem(); bpcExit();return true;
+        case 5: bpcInitialize(); bpcRebootSystem(); bpcExit(); return true;
         }
     }
     return false;
 }
 
 int main(int argc, char *argv[]){
+    Menu main_menu;
+    Menu info_menu;
+    Menu hardware_menu;
 
     consoleInit(NULL);
 
