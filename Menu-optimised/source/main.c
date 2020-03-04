@@ -5,79 +5,102 @@
 
 // Include the main libnx system header, for Switch development
 #include <switch.h>
-#include "init.c"
+#include "../include/init.h"
+//#include "../include/init.c"
 
-#define STATUS_POS CONSOLE_ESC(10;28H)
-#define CHARGER_POS CONSOLE_ESC(11;29H)
 
 u64 kDown;
+int done = 0;
 
-int main_menu_pos = 1;
-char *main_menu_labels[] = {"Help", "Console Info", "Exit", "Shutdown", "Reboot"};
-bool main_menu_aval = true;
+//int main_menu_pos = 1;
+//char *main_menu_labels[] = {"Help", "Console Info", "Exit", "Shutdown", "Reboot"};
+//bool main_menu_aval = true;
+//
+//int info_menu_pos = 1;
+//char *info_menu_labels[] = {"System", "Hardware","Button test", "Other"};
+//bool info_menu_aval = true;
+//
+//int hardware_menu_pos = 1;
+//char *hardware_menu_labels[] = {"Battery", "Storage", "Controllers", "LCD", "USB", "Other?"};
+//bool hardware_menu_aval = true;
 
-int info_menu_pos = 1;
-char *info_menu_labels[] = {"System", "Hardware","Button test", "Other"};
-bool info_menu_aval = true;
-
-int hardware_menu_pos = 1;
-char *hardware_menu_labels[] = {"Battery", "Storage", "Controllers", "LCD", "USB", "Other?"};
-bool hardware_menu_aval = true;
-
-
-// move cursor
-int MoveCursor(int *pos, int max, int min){
-    if (kDown & KEY_DOWN && *pos < max){
-        (*pos)++;
-    }
-    if (kDown & KEY_UP && *pos > min){
-        (*pos)--;
-    }
-    printf("\x1b[%d;1H%c", *pos, 16);
-    return *pos;
-}
-
-// print menu items
-void PrintItems(char **items, int size){
-    for (int i = 0; i < size; i++){
-        printf("\x1b[%d;1H  %s", i+1, items[i]);
+void PrintEntries(Entry *menu){
+    for(int i = menu->pos; i < menu->size+1; i++){    // print menu items
+        printf("\x1b[%d;1H  %s", i, menu->labels[i-1]->name);
     }
 }
 
-// exit from a menu and reset cursor possition for said menu
-bool Exit(int *position){
-    if (kDown & KEY_B){
-        if (position != NULL){
-            *position = 1;
+void MoveCrusor(Entry *menu){
+    if (menu->pos != 0){
+        if (kDown & KEY_UP && menu->pos > 1){
+            (menu->pos)--;
         }
-        printf(CONSOLE_ESC(2J));
-        return true;
-    }
-    else {
-        return false;
+        if (kDown & KEY_DOWN && menu->pos < menu->size){
+            (menu->pos)++;
+        }
+        printf("\x1b[%d;1H%c", menu->pos, 16);// print cursor
     }
 }
 
-int ConfigMenu(){
-    return 2;
+int DefaultExitFunction(){
+    if (kDown & KEY_A){
+        done = 1;
+    }
+    done = 0;
+    return 0;
 }
+
 
 int main(int argc, char *argv[]){
+    Entry default_menu = InitStructMenu("default menu", 3, NULL);
+    Entry help_item = InitStructItem("Help", "\x1b[20;35HThis is a simple help.", &default_menu);
+    Entry other_menu = InitStructMenu("Other submenu", 5, &default_menu);
+    Entry exit_item = InitStructItem("Exit", NULL, &default_menu);
+
+    exit_item.func = DefaultExitFunction;
+
+    default_menu.labels[0] = &help_item;
+    default_menu.labels[1] = &other_menu;
+    default_menu.labels[2] = &exit_item;
+
+    Entry mover = default_menu;
 
     consoleInit(NULL);
 
     while(appletMainLoop()){
-        
+
         hidScanInput();
+
         kDown = hidKeysDown(CONTROLLER_P1_AUTO);
         
         // exit with PLUS
-        if (kDown &KEY_PLUS){
+        if (kDown & KEY_PLUS || done){
             break;
         }
+
+        /*
+        if(mover.is_item)   // is item
+            if(mover.data != NULL)  // has data -> print them
+            if(mover.func != NULL)  // has function -> execute
+            if(kDown & KEY_B)   // go back mover = *mover.prev
+        else(!mover.is_item)    // is menu
+            if(mover.data != NULL)  // has data -> print them
+            for(int i = mover.pos; i < mover.size; i++){    // print menu items
+                printf("\x1b[%d;3H%s", i, mover.labels[i-1]->name);
+            }
+
+            if(mover.func != NULL)  // has function -> execute
+            if
+        */
+        
+        PrintEntries(&mover);
+        MoveCrusor(&mover);
+
+        printf(CONSOLE_ESC(20;20H)"%d", rand()%1000);
 
         consoleUpdate(NULL);
     }
     consoleExit(NULL);
+    free(default_menu.labels);
     return 0;
 }

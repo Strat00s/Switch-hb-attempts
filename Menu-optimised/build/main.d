@@ -1,5 +1,5 @@
 main.o: \
- /home/stratos/Projects/Switch/homebrew/Switch-hb-attempts/Menu-optimised/source/main.c \
+ /home/stratos/Projects/Switch/Switch-hb-attempts/Menu-optimised/source/main.c \
  /opt/devkitpro/libnx/include/switch.h \
  /opt/devkitpro/libnx/include/switch/types.h \
  /opt/devkitpro/libnx/include/switch/result.h \
@@ -134,7 +134,8 @@ main.o: \
  /opt/devkitpro/libnx/include/switch/crypto/cmac.h \
  /opt/devkitpro/libnx/include/switch/crypto/sha1.h \
  /opt/devkitpro/libnx/include/switch/crypto/hmac.h \
- /opt/devkitpro/libnx/include/switch/crypto/crc.h
+ /opt/devkitpro/libnx/include/switch/crypto/crc.h \
+ /home/stratos/Projects/Switch/Switch-hb-attempts/Menu-optimised/source/../include/init.h
 
 /opt/devkitpro/libnx/include/switch.h:
 
@@ -405,3 +406,5 @@ main.o: \
 /opt/devkitpro/libnx/include/switch/crypto/hmac.h:
 
 /opt/devkitpro/libnx/include/switch/crypto/crc.h:
+
+/home/stratos/Projects/Switch/Switch-hb-attempts/Menu-optimised/source/../include/init.h:
