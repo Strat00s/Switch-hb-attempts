@@ -25,7 +25,7 @@ void PrintEntries(Entry **menu){
     }
 }
 
-void MoveCrusor(Entry **menu){
+void MoveCursor(Entry **menu){
     if ((*menu)->pos != 0){
         if (kDown & KEY_UP && (*menu)->pos > (*menu)->min){
             ((*menu)->pos)--;
@@ -66,7 +66,7 @@ int main(){
 
     // initialize and set our menus and items
     Entry default_menu = InitStructMenu("default menu", 4, 2, NULL);
-    Entry help_item = InitStructItem("Help", "\x1b[20;35HThis is a simple help.", &default_menu);
+    Entry help_item = InitStructItem("Help", "\x1b[20;20HThis is a simple help.", &default_menu);
     Entry other_menu = InitStructMenu("Other submenu", 5, 1, &default_menu);
     Entry exit_item = InitStructItem("Exit", NULL, &default_menu);
     Entry useless1_item = InitStructItem("This", NULL, &other_menu); 
@@ -88,6 +88,7 @@ int main(){
     default_menu.labels[2] = &exit_item;
 
     default_menu.data = "\x1b[1;1HMain Menu";
+    
 
     // pointer to menus and items
     Entry *mover = &default_menu;
@@ -106,7 +107,7 @@ int main(){
         }
 
         PrintEntries(&mover);
-        MoveCrusor(&mover);
+        MoveCursor(&mover);
         Select(&mover);
         GoBack(&mover);
 
