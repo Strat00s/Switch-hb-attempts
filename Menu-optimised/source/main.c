@@ -39,8 +39,13 @@ void MoveCrusor(Entry **menu){
 
 void Select(Entry **menu){
     if (kDown & KEY_A && (*menu)->labels != NULL){
-        *menu = (*menu)->labels[(*menu)->pos-(*menu)->min];
-        printf(CONSOLE_ESC(2J));
+        if ((*menu)->data == NULL && (*menu)->func == NULL){
+            printf("\x1b[%d;%ldHThis entry is empty!", (*menu)->pos, strlen((*menu)->labels[(*menu)->pos-(*menu)->min]->name)+7);
+        }
+        else {
+            *menu = (*menu)->labels[(*menu)->pos-(*menu)->min];
+            printf(CONSOLE_ESC(2J));
+        }
     }
 }
 
