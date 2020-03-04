@@ -8,8 +8,10 @@ typedef struct Entry{
     char *name;
     char *data;
     bool available;
-    int pos;
-    int size;
+    unsigned int pos;
+    unsigned int min;
+    unsigned int max;
+    int ret;
     struct Entry *prev;
     struct Entry **labels;
     int (*func)();
@@ -29,16 +31,17 @@ typedef struct Entry{
 //    return new_menu;
 //}
 
-Entry InitStructMenu(char *name, int size, Entry *prev){
+Entry InitStructMenu(char *name, unsigned int max, unsigned int min, Entry *prev){
     Entry new_menu = {
         .name = name,           // name to print
-        .size = size,           // number of items
-        .pos = 1,               // cursor starting position (99% is 1)
+        .min = min,             // default cursor position (99% is 1). Change if you print something above menu entire
+        .max = max,             // number of items
+        .pos = min,             // cursor position
         .data = NULL,           // printable data. use "\x1b[x;yH" to set coords
         .is_item = false,       // is it a menu or item. items usually have data or call function
         //.available = true,
-        .prev = prev,           // pointer to previous menu
-        .labels = malloc(sizeof(Entry *)*size) // array of pointers to individual menu items
+        .prev = prev,           // pointer to previous menu. If none, enter NULL
+        .labels = malloc(sizeof(Entry *)*max) // array of pointers to individual menu items
     };
     return new_menu;
 }
@@ -46,7 +49,8 @@ Entry InitStructMenu(char *name, int size, Entry *prev){
 Entry InitStructItem(char *name, char *data, Entry *prev){
     Entry new_menu = {
         .name = name,
-        .size = 0,
+        .min = 0,
+        .max = 0,
         .pos = 0,
         .data = data,
         .is_item = true,    

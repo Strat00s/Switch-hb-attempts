@@ -12,49 +12,52 @@
 u64 kDown;
 int done = 0;
 
-//int main_menu_pos = 1;
-//char *main_menu_labels[] = {"Help", "Console Info", "Exit", "Shutdown", "Reboot"};
-//bool main_menu_aval = true;
-//
-//int info_menu_pos = 1;
-//char *info_menu_labels[] = {"System", "Hardware","Button test", "Other"};
-//bool info_menu_aval = true;
-//
-//int hardware_menu_pos = 1;
-//char *hardware_menu_labels[] = {"Battery", "Storage", "Controllers", "LCD", "USB", "Other?"};
-//bool hardware_menu_aval = true;
-
 void PrintEntries(Entry *menu){
-    for(int i = menu->pos; i < menu->size+1; i++){    // print menu items
-        printf("\x1b[%d;1H  %s", i, menu->labels[i-1]->name);
+    if (menu->data != NULL){
+        printf("%s", menu->data);
+    }
+    else if (!menu->is_item){
+        for(int i = menu->pos; i < menu->max+1; i++){    // print menu items
+            printf("\x1b[%d;1H  %s", i, menu->labels[i-menu->min]->name);
+        }
     }
 }
 
 void MoveCrusor(Entry *menu){
     if (menu->pos != 0){
-        if (kDown & KEY_UP && menu->pos > 1){
+        if (kDown & KEY_UP && menu->pos > menu->min){
             (menu->pos)--;
         }
-        if (kDown & KEY_DOWN && menu->pos < menu->size){
+        if (kDown & KEY_DOWN && menu->pos < menu->max){
             (menu->pos)++;
         }
         printf("\x1b[%d;1H%c", menu->pos, 16);// print cursor
     }
 }
 
-int DefaultExitFunction(){
-    if (kDown & KEY_A){
-        done = 1;
+void Select(Entry *menu){
+    if (kDown & KEY_A && menu->labels != NULL){
+        *menu = *menu->labels[menu->pos-menu->min];
+        printf(CONSOLE_ESC(2J));
     }
-    done = 0;
-    return 0;
+}
+
+void GoBack(Entry *menu){
+    if (kDown & KEY_B && menu->prev != NULL){
+        *menu = *menu->prev;
+        printf(CONSOLE_ESC(2J));
+    }
+}
+
+int DefaultExitFunction(){
+    return 1;
 }
 
 
-int main(int argc, char *argv[]){
-    Entry default_menu = InitStructMenu("default menu", 3, NULL);
+int main(){
+    Entry default_menu = InitStructMenu("default menu", 4, 2, NULL);
     Entry help_item = InitStructItem("Help", "\x1b[20;35HThis is a simple help.", &default_menu);
-    Entry other_menu = InitStructMenu("Other submenu", 5, &default_menu);
+    Entry other_menu = InitStructMenu("Other submenu", 5, 1, &default_menu);
     Entry exit_item = InitStructItem("Exit", NULL, &default_menu);
 
     exit_item.func = DefaultExitFunction;
@@ -62,6 +65,8 @@ int main(int argc, char *argv[]){
     default_menu.labels[0] = &help_item;
     default_menu.labels[1] = &other_menu;
     default_menu.labels[2] = &exit_item;
+
+    default_menu.data = "\x1b[1;1HMain Menu";
 
     Entry mover = default_menu;
 
@@ -74,40 +79,18 @@ int main(int argc, char *argv[]){
         kDown = hidKeysDown(CONTROLLER_P1_AUTO);
         
         // exit with PLUS
-        if (kDown & KEY_PLUS || done){
+        if (kDown & KEY_PLUS || exit_item.ret){
             break;
         }
 
-        /*
-        if(mover.is_item)   // is item
-            if(mover.data != NULL)  // has data -> print them
-            if(mover.func != NULL)  // has function -> execute
-            if(kDown & KEY_B)   // go back mover = *mover.prev
-        else(!mover.is_item)    // is menu
-            if(mover.data != NULL)  // has data -> print them
-            print entrie (done)
-            move cursor (done)
-
-            if(mover.func != NULL)  // has function -> execute
-            if
-        */
-        if (!mover.is_item){
-            PrintEntries(&mover);
-            MoveCrusor(&mover);
-            if (kDown & KEY_A && mover.labels != NULL){
-                mover = *mover.labels[mover.pos-1];
-                printf(CONSOLE_ESC(2J));
-            }
-        }
-        else {
-            printf("%s", mover.data);
-            if (kDown & KEY_B){
-                mover = *mover.prev;
-                printf(CONSOLE_ESC(2J));
-            }
-        }
+        PrintEntries(&mover);
+        RunFunction(&mover);
+        MoveCrusor(&mover);
+        Select(&mover);
+        GoBack(&mover);
 
         printf(CONSOLE_ESC(20;20H)"%d", rand()%1000);
+        printf(CONSOLE_ESC(21;20H)"done: %d", done);
 
         consoleUpdate(NULL);
     }
