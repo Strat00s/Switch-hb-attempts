@@ -10,7 +10,6 @@
 
 
 u64 kDown;
-int done = 0;
 
 void PrintEntries(Entry **menu){
     if ((*menu)->data != NULL){
@@ -20,7 +19,7 @@ void PrintEntries(Entry **menu){
         (*menu)->ret = (*menu)->func();
     }
     else if (!(*menu)->is_item){
-        for(int i = (*menu)->pos; i < (*menu)->max+1; i++){    // print (*menu) items
+        for(int i = (*menu)->min; i < (*menu)->max+1; i++){    // print (*menu) items
             printf("\x1b[%d;1H  %s", i, (*menu)->labels[i-(*menu)->min]->name);
         }
     }
@@ -47,6 +46,7 @@ void Select(Entry **menu){
 
 void GoBack(Entry **menu){
     if (kDown & KEY_B && (*menu)->prev != NULL){
+        (*menu)->pos = (*menu)->min;
         *menu = (*menu)->prev;
         printf(CONSOLE_ESC(2J));
     }
@@ -58,10 +58,23 @@ int DefaultExitFunction(){
 
 
 int main(){
+
+    // initialize and set our menus and items
     Entry default_menu = InitStructMenu("default menu", 4, 2, NULL);
     Entry help_item = InitStructItem("Help", "\x1b[20;35HThis is a simple help.", &default_menu);
     Entry other_menu = InitStructMenu("Other submenu", 5, 1, &default_menu);
     Entry exit_item = InitStructItem("Exit", NULL, &default_menu);
+    Entry useless1_item = InitStructItem("This", NULL, &other_menu); 
+    Entry useless2_item = InitStructItem("menu", NULL, &other_menu);
+    Entry useless3_item = InitStructItem("does", NULL, &other_menu);
+    Entry useless4_item = InitStructItem("absolutely", NULL, &other_menu);
+    Entry useless5_item = InitStructItem("nothing!", NULL, &other_menu);
+
+    other_menu.labels[0] = &useless1_item;
+    other_menu.labels[1] = &useless2_item;
+    other_menu.labels[2] = &useless3_item;
+    other_menu.labels[3] = &useless4_item;
+    other_menu.labels[4] = &useless5_item;
 
     exit_item.func = DefaultExitFunction;
 
@@ -71,6 +84,7 @@ int main(){
 
     default_menu.data = "\x1b[1;1HMain Menu";
 
+    // pointer to menus and items
     Entry *mover = &default_menu;
 
     consoleInit(NULL);
@@ -81,7 +95,7 @@ int main(){
 
         kDown = hidKeysDown(CONTROLLER_P1_AUTO);
         
-        // exit with PLUS
+        // exit with PLUS or when we chose exit from menu
         if (kDown & KEY_PLUS || exit_item.ret){
             break;
         }
@@ -90,10 +104,6 @@ int main(){
         MoveCrusor(&mover);
         Select(&mover);
         GoBack(&mover);
-
-        printf(CONSOLE_ESC(20;20H)"%d", rand()%1000);
-        printf(CONSOLE_ESC(21;20H)"done: %d", done);
-        printf(CONSOLE_ESC(22;20H)"pos: %d", default_menu.pos);
 
         consoleUpdate(NULL);
     }
