@@ -85,16 +85,27 @@ int main(int argc, char *argv[]){
             if(kDown & KEY_B)   // go back mover = *mover.prev
         else(!mover.is_item)    // is menu
             if(mover.data != NULL)  // has data -> print them
-            for(int i = mover.pos; i < mover.size; i++){    // print menu items
-                printf("\x1b[%d;3H%s", i, mover.labels[i-1]->name);
-            }
+            print entrie (done)
+            move cursor (done)
 
             if(mover.func != NULL)  // has function -> execute
             if
         */
-        
-        PrintEntries(&mover);
-        MoveCrusor(&mover);
+        if (!mover.is_item){
+            PrintEntries(&mover);
+            MoveCrusor(&mover);
+            if (kDown & KEY_A && mover.labels != NULL){
+                mover = *mover.labels[mover.pos-1];
+                printf(CONSOLE_ESC(2J));
+            }
+        }
+        else {
+            printf("%s", mover.data);
+            if (kDown & KEY_B){
+                mover = *mover.prev;
+                printf(CONSOLE_ESC(2J));
+            }
+        }
 
         printf(CONSOLE_ESC(20;20H)"%d", rand()%1000);
 
