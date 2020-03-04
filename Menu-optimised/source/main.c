@@ -12,39 +12,42 @@
 u64 kDown;
 int done = 0;
 
-void PrintEntries(Entry *menu){
-    if (menu->data != NULL){
-        printf("%s", menu->data);
+void PrintEntries(Entry **menu){
+    if ((*menu)->data != NULL){
+        printf("%s", (*menu)->data);
     }
-    else if (!menu->is_item){
-        for(int i = menu->pos; i < menu->max+1; i++){    // print menu items
-            printf("\x1b[%d;1H  %s", i, menu->labels[i-menu->min]->name);
+    if ((*menu)->func != NULL){
+        (*menu)->ret = (*menu)->func();
+    }
+    else if (!(*menu)->is_item){
+        for(int i = (*menu)->pos; i < (*menu)->max+1; i++){    // print (*menu) items
+            printf("\x1b[%d;1H  %s", i, (*menu)->labels[i-(*menu)->min]->name);
         }
     }
 }
 
-void MoveCrusor(Entry *menu){
-    if (menu->pos != 0){
-        if (kDown & KEY_UP && menu->pos > menu->min){
-            (menu->pos)--;
+void MoveCrusor(Entry **menu){
+    if ((*menu)->pos != 0){
+        if (kDown & KEY_UP && (*menu)->pos > (*menu)->min){
+            ((*menu)->pos)--;
         }
-        if (kDown & KEY_DOWN && menu->pos < menu->max){
-            (menu->pos)++;
+        if (kDown & KEY_DOWN && (*menu)->pos < (*menu)->max){
+            ((*menu)->pos)++;
         }
-        printf("\x1b[%d;1H%c", menu->pos, 16);// print cursor
+        printf("\x1b[%d;1H%c", (*menu)->pos, 16);// print cursor
     }
 }
 
-void Select(Entry *menu){
-    if (kDown & KEY_A && menu->labels != NULL){
-        *menu = *menu->labels[menu->pos-menu->min];
+void Select(Entry **menu){
+    if (kDown & KEY_A && (*menu)->labels != NULL){
+        *menu = (*menu)->labels[(*menu)->pos-(*menu)->min];
         printf(CONSOLE_ESC(2J));
     }
 }
 
-void GoBack(Entry *menu){
-    if (kDown & KEY_B && menu->prev != NULL){
-        *menu = *menu->prev;
+void GoBack(Entry **menu){
+    if (kDown & KEY_B && (*menu)->prev != NULL){
+        *menu = (*menu)->prev;
         printf(CONSOLE_ESC(2J));
     }
 }
@@ -68,7 +71,7 @@ int main(){
 
     default_menu.data = "\x1b[1;1HMain Menu";
 
-    Entry mover = default_menu;
+    Entry *mover = &default_menu;
 
     consoleInit(NULL);
 
@@ -84,13 +87,13 @@ int main(){
         }
 
         PrintEntries(&mover);
-        RunFunction(&mover);
         MoveCrusor(&mover);
         Select(&mover);
         GoBack(&mover);
 
         printf(CONSOLE_ESC(20;20H)"%d", rand()%1000);
         printf(CONSOLE_ESC(21;20H)"done: %d", done);
+        printf(CONSOLE_ESC(22;20H)"pos: %d", default_menu.pos);
 
         consoleUpdate(NULL);
     }
