@@ -1,22 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+#include <stdbool.h>
 
 // Include the main libnx system header, for Switch development
 #include <switch.h>
+#include "init.c"
 
 #define STATUS_POS CONSOLE_ESC(10;28H)
 #define CHARGER_POS CONSOLE_ESC(11;29H)
 
 u64 kDown;
-
-typedef struct Menu{
-    int position;
-    bool available;
-    int size;
-    char *labels[];
-} Menu;
 
 int main_menu_pos = 1;
 char *main_menu_labels[] = {"Help", "Console Info", "Exit", "Shutdown", "Reboot"};
@@ -64,53 +58,11 @@ bool Exit(int *position){
     }
 }
 
-
-// each new function = new menu/item
-bool ConsoleInfoMenu(){
-    if (info_menu_aval){
-        PrintItems(info_menu_labels, 4);
-        MoveCursor(&info_menu_pos, 4, 1);
-        return Exit(&info_menu_pos);
-    }
-    return false;
-}
-
-bool HelpMenu(){
-    printf(CONSOLE_ESC(9;20H)  "+-------------------------------------------+");
-    printf(CONSOLE_ESC(10;20H) "|This is a simple help.                     |");
-    printf(CONSOLE_ESC(11;20H) "+-------------------------------------------+");
-    printf(CONSOLE_ESC(12;20H) "|To select items, press A.                  |");
-    printf(CONSOLE_ESC(13;20H) "|Press B to go back.                        |");
-    printf(CONSOLE_ESC(14;20H) "|To exit, go to main menu and select 'Exit'.|");
-    printf(CONSOLE_ESC(15;20H) "+-------------------------------------------+");
-
-    return Exit(NULL);
-}
-
-bool MainMenu(){
-    if (main_menu_aval){
-        PrintItems(main_menu_labels, 5);
-        MoveCursor(&main_menu_pos, 5, 1);
-        if (kDown & KEY_B){
-            main_menu_pos = 3;
-        }
-    }
-    if (kDown & KEY_A || !main_menu_aval){
-        switch (main_menu_pos) {
-        case 1: printf(CONSOLE_ESC(2J)); main_menu_aval = HelpMenu();break;
-        case 2: printf(CONSOLE_ESC(2J)); main_menu_aval = ConsoleInfoMenu(); break;
-        case 3: return true;
-        case 4: bpcInitialize(); bpcShutdownSystem(); bpcExit();return true;
-        case 5: bpcInitialize(); bpcRebootSystem(); bpcExit(); return true;
-        }
-    }
-    return false;
+int ConfigMenu(){
+    return 2;
 }
 
 int main(int argc, char *argv[]){
-    Menu main_menu;
-    Menu info_menu;
-    Menu hardware_menu;
 
     consoleInit(NULL);
 
@@ -120,12 +72,9 @@ int main(int argc, char *argv[]){
         kDown = hidKeysDown(CONTROLLER_P1_AUTO);
         
         // exit with PLUS
-        if (kDown &KEY_PLUS || MainMenu()){
+        if (kDown &KEY_PLUS){
             break;
         }
-        printf(CONSOLE_ESC(1;60H)"DEBUG:");//debug
-        printf(CONSOLE_ESC(2;60H)"main_menu_pos: %d", main_menu_pos);//debug
-        printf(CONSOLE_ESC(3;60H)"info_menu_pos: %d", info_menu_pos);//debug
 
         consoleUpdate(NULL);
     }
