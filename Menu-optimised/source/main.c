@@ -18,7 +18,7 @@ void PrintEntries(Entry **menu){
     if ((*menu)->func != NULL){
         (*menu)->ret = (*menu)->func();
     }
-    else if (!(*menu)->is_item){
+    if (!(*menu)->is_item){
         for(int i = (*menu)->min; i < (*menu)->max+1; i++){    // print (*menu) items
             printf("\x1b[%d;1H  %s", i, (*menu)->labels[i-(*menu)->min]->name);
         }
@@ -61,11 +61,18 @@ int DefaultExitFunction(){
     return 1;
 }
 
+int GoToExit(){
+    if (kDown & KEY_B){
+        default_menu.pos = default_menu.max;
+    }
+    return 0;
+}
 
 int main(){
 
     // initialize and set our menus and items
-    Entry default_menu = InitStructMenu("default menu", 4, 2, NULL);
+    // default_menu defined in init.h for it's specific function to work
+    default_menu = InitStructMenu("default menu", 4, 2, NULL);
     Entry help_item = InitStructItem("Help", "\x1b[20;20HThis is a simple help.", &default_menu);
     Entry other_menu = InitStructMenu("Other submenu", 5, 1, &default_menu);
     Entry exit_item = InitStructItem("Exit", NULL, &default_menu);
@@ -88,7 +95,8 @@ int main(){
     default_menu.labels[2] = &exit_item;
 
     default_menu.data = "\x1b[1;1HMain Menu";
-    
+
+    default_menu.func = GoToExit;    
 
     // pointer to menus and items
     Entry *mover = &default_menu;

@@ -46,7 +46,7 @@ Entry InitStructMenu(char *name, unsigned int max, unsigned int min, Entry *prev
     return new_menu;
 }
 
-Entry InitStructItem(char *name, char *data, Entry *prev){
+Entry InitStructItem(char *name, char *data,/* int (*func)(),*/Entry *prev){
     Entry new_menu = {
         .name = name,
         .min = 0,
@@ -60,3 +60,5 @@ Entry InitStructItem(char *name, char *data, Entry *prev){
     };
     return new_menu;
 }
+
+Entry default_menu;
