@@ -2,14 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include "../include/init.h"
 
 // Include the main libnx system header, for Switch development
 #include <switch.h>
-#include "../include/init.h"
-//#include "../include/init.c"
 
-
-u64 kDown;
+// Macros
+#define kDown hidKeysDown(CONTROLLER_P1_AUTO)
+#define IS_PRESSED(KEY) kDown & KEY
+#define CLEAR() printf(CONSOLE_ESC(2J))
+#define PRINT(row, col, fmt, ...) printf("\x1b["#row #col"H", fmt, ...)
 
 void PrintEntries(Entry **menu){
     if ((*menu)->data != NULL){
@@ -27,10 +29,10 @@ void PrintEntries(Entry **menu){
 
 void MoveCursor(Entry **menu){
     if ((*menu)->pos != 0){
-        if (kDown & KEY_UP && (*menu)->pos > (*menu)->min){
+        if (IS_PRESSED(KEY_UP) && (*menu)->pos > (*menu)->min){
             ((*menu)->pos)--;
         }
-        if (kDown & KEY_DOWN && (*menu)->pos < (*menu)->max){
+        if (IS_PRESSED(KEY_DOWN) && (*menu)->pos < (*menu)->max){
             ((*menu)->pos)++;
         }
         printf("\x1b[%d;1H%c", (*menu)->pos, 16);// print cursor
@@ -38,22 +40,22 @@ void MoveCursor(Entry **menu){
 }
 
 void Select(Entry **menu){
-    if (kDown & KEY_A && (*menu)->labels != NULL){
+    if ((IS_PRESSED(KEY_A)) && (*menu)->labels != NULL){
         if ((*menu)->data == NULL && (*menu)->func == NULL){
             printf("\x1b[%d;%ldHThis entry is empty!", (*menu)->pos, strlen((*menu)->labels[(*menu)->pos-(*menu)->min]->name)+7);
         }
         else {
             *menu = (*menu)->labels[(*menu)->pos-(*menu)->min];
-            printf(CONSOLE_ESC(2J));
+            CLEAR();
         }
     }
 }
 
 void GoBack(Entry **menu){
-    if (kDown & KEY_B && (*menu)->prev != NULL){
+    if (IS_PRESSED(KEY_B) && (*menu)->prev != NULL){
         (*menu)->pos = (*menu)->min;
         *menu = (*menu)->prev;
-        printf(CONSOLE_ESC(2J));
+        CLEAR();
     }
 }
 
@@ -62,7 +64,7 @@ int DefaultExitFunction(){
 }
 
 int GoToExit(){
-    if (kDown & KEY_B){
+    if (IS_PRESSED(KEY_B)){
         default_menu.pos = default_menu.max;
     }
     return 0;
@@ -106,11 +108,9 @@ int main(){
     while(appletMainLoop()){
 
         hidScanInput();
-
-        kDown = hidKeysDown(CONTROLLER_P1_AUTO);
         
         // exit with PLUS or when we chose exit from menu
-        if (kDown & KEY_PLUS || exit_item.ret){
+        if (IS_PRESSED(KEY_PLUS) || exit_item.ret){
             break;
         }
 
@@ -123,5 +123,6 @@ int main(){
     }
     consoleExit(NULL);
     free(default_menu.labels);
+    free(other_menu.labels);
     return 0;
 }
